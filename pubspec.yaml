@@ -1,0 +1,37 @@
+name: chat
+description: 'A new Flutter project.'
+publish_to: 'none'
+version: 1.0.0+100
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  adaptive_dialog: ^2.4.0 # https://pub.dev/packages/adaptive_dialog/
+  auto_size_text: # https://pub.dev/packages/auto_size_text/
+  collection: # https://pub.dev/packages/collection/
+  device_info_plus: # https://pub.dev/packages/device_info_plus/
+  flutter_cache_manager: # https://pub.dev/packages/flutter_cache_manager/
+  flutter_native_splash: # https://pub.dev/packages/flutter_native_splash/
+  flutter_riverpod: # https://pub.dev/packages/flutter_riverpod/
+  flutter_svg: # https://pub.dev/packages/flutter_svg/
+  go_router: # https://pub.dev/packages/go_router/
+  halo: # https://pub.dev/packages/halo/
+  http: # https://pub.dev/packages/http/
+  intl: # https://pub.dev/packages/intl/
+  package_info_plus: # https://pub.dev/packages/package_info_plus/
+  path: # https://pub.dev/packages/path/
+  shared_preferences: # https://pub.dev/packages/shared_preferences/
+
+dev_dependencies:
+  flutter_lints: # https://pub.dev/packages/flutter_lints/
+  icons_launcher: # https://pub.dev/packages/icons_launcher/
+  flutter_gen_runner: # https://pub.dev/packages/flutter_gen_runner:/
+  custom_lint: # https://pub.dev/packages/custom_lint/
+  riverpod_lint: # https://pub.dev/packages/riverpod_lint/
+
+flutter:
+  uses-material-design: true
