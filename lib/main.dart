@@ -1,67 +1,62 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:halo/halo.dart';
+import 'package:chat/config.dart';
+import 'package:chat/gen/l10n.dart';
+import 'package:chat/route/router.dart';
+import 'package:chat/state/p.dart';
+import 'package:chat/widgets/alert.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  await P.init();
+  runApp(const _App());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _App extends StatelessWidget {
+  const _App();
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    _counter++;
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    P.app.firstContextGot(context);
+    final split = Config.localeString.split("_");
+    final defaultLocale = Config.localeString.isNotEmpty ? Locale(split.first, split.last) : null;
+    return StateWrapper(
+      child: MaterialApp.router(
+        locale: defaultLocale,
+        supportedLocales: const [
+          Locale("zh", "Hans"),
+          Locale("zh", "Hant"),
+          Locale("en", "US"),
+          Locale("ja", "JP"),
+        ],
+        localizationsDelegates: const [
+          S.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: ThemeData(
+          fontFamily: "TONEOZ-TSUIPITA-TC",
+          brightness: Brightness.light,
+          appBarTheme: const AppBarTheme(scrolledUnderElevation: 0),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        darkTheme: ThemeData(
+          fontFamily: "TONEOZ-TSUIPITA-TC",
+          brightness: Brightness.light,
+          appBarTheme: const AppBarTheme(scrolledUnderElevation: 0),
+        ),
+        debugShowCheckedModeBanner: kDebugMode,
+        routerConfig: kRouter,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              C(color: Theme.of(context).scaffoldBackgroundColor),
+              if (child != null) child,
+              Alert.deploy(),
+            ],
+          );
+        },
       ),
     );
   }

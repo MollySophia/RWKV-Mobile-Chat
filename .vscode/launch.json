@@ -7,7 +7,13 @@
     {
       "name": "RWKV-Mobile-Chat",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "args": [
+        "--dart-define=locale=zh_Hans",
+        // "--dart-define=locale=en_US",
+      ]
     },
     {
       "name": "RWKV-Mobile-Chat (profile mode)",
