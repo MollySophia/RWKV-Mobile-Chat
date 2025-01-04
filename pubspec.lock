@@ -409,10 +409,10 @@ packages:
     dependency: "direct main"
     description:
       name: halo
-      sha256: "473bd5ccfc747ac6e73d9f232449d50c81e49fdacd3cf95a54ca63723c4ac14c"
+      sha256: "824e6f8bbcf403d3f5d5e5e9822a9b2a6f63eb47731c8c64620fdf1347b41c39"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.1"
+    version: "0.2.3"
   hashcodes:
     dependency: transitive
     description:
