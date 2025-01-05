@@ -101,6 +101,7 @@ class _List extends ConsumerWidget {
       controller: P.chat.scrollController,
       child: ListView.separated(
         reverse: useReverse,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: EI.o(
           t: paddingTop + kToolbarHeight + 12,
           b: inputHeight + 12,
