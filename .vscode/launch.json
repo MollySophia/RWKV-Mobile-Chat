@@ -5,13 +5,25 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "RWKV-Mobile-Chat",
+      "name": "debug",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "args": [
         "--dart-define=locale=zh_Hans",
+      ]
+    },
+    {
+      "name": "debug (Halo)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "args": [
+        // "--dart-define=locale=zh_Hans",
+        "--dart-define=show_home=true",
+        "--dart-define=use_fake_messages=true",
         // "--dart-define=locale=en_US",
       ]
     },

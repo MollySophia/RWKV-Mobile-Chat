@@ -10,20 +10,26 @@ import 'package:halo/halo.dart';
 import 'package:chat/model/message.dart';
 import 'package:chat/state/p.dart';
 
-class Chat extends ConsumerWidget {
-  const Chat({super.key});
+class PageChat extends ConsumerWidget {
+  const PageChat({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paddingTop = ref.watch(P.app.paddingTop);
-    final paddingBottom = ref.watch(P.app.paddingBottom);
-
     final inputHeight = ref.watch(P.chat.inputHeight);
 
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(child: _List()),
+          Positioned.fill(
+            child: GD(
+              onTap: () {
+                P.chat.focusNode.unfocus();
+              },
+              child: _List(),
+            ),
+          ),
+          _ScrollToBottomButton(),
           Positioned(
             bottom: 0,
             left: 0,
@@ -31,11 +37,11 @@ class Chat extends ConsumerWidget {
             child: _Input(),
           ),
           Positioned(
-            bottom: paddingBottom + inputHeight,
+            bottom: inputHeight,
             left: 0,
             right: 0,
             height: 0.5,
-            child: Container(
+            child: C(
               height: kToolbarHeight,
               color: kB.wo(0.1),
             ),
@@ -45,7 +51,7 @@ class Chat extends ConsumerWidget {
             left: 0,
             right: 0,
             height: 0.5,
-            child: Container(
+            child: C(
               height: kToolbarHeight,
               color: kB.wo(0.1),
             ),
@@ -58,7 +64,7 @@ class Chat extends ConsumerWidget {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                 child: AppBar(
-                  backgroundColor: kW.wo(0.4),
+                  backgroundColor: kW.wo(0.6),
                   elevation: 0,
                   title: AutoSizeText(
                     S.current.chat_title,
@@ -84,34 +90,41 @@ class _List extends ConsumerWidget {
     // TODO: Use select to improve performance
     final messages = ref.watch(P.chat.messages);
     final paddingTop = ref.watch(P.app.paddingTop);
-    final paddingBottom = ref.watch(P.app.paddingBottom);
     final inputHeight = ref.watch(P.chat.inputHeight);
+    final useReverse = ref.watch(P.chat.useReverse);
 
-    return ListView.separated(
-      padding: EI.o(
-        t: paddingTop + kToolbarHeight + 12,
-        b: max(0, paddingBottom) + inputHeight + 12,
-      ),
+    return RawScrollbar(
+      radius: 100.rr,
+      thickness: 4,
+      thumbColor: kB.wo(0.4),
+      padding: EI.o(r: 4, b: inputHeight + 4, t: paddingTop + kToolbarHeight + 4),
       controller: P.chat.scrollController,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        final msg = messages[index];
-        final renderShadow = index == messages.length - 1 || index == messages.length - 2;
-        return _Message(msg, renderShadow: renderShadow);
-      },
-      separatorBuilder: (context, index) {
-        return const SB(height: 15);
-      },
+      child: ListView.separated(
+        reverse: useReverse,
+        padding: EI.o(
+          t: paddingTop + kToolbarHeight + 12,
+          b: inputHeight + 12,
+        ),
+        controller: P.chat.scrollController,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final finalIndex = useReverse ? messages.length - 1 - index : index;
+          final msg = messages[finalIndex];
+          return _Message(msg);
+        },
+        separatorBuilder: (context, index) {
+          return const SB(height: 15);
+        },
+      ),
     );
   }
 }
 
 class _Message extends ConsumerWidget {
   final Message msg;
-  final bool renderShadow;
 
-  const _Message(this.msg, {this.renderShadow = false});
+  const _Message(this.msg);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -149,15 +162,7 @@ class _Message extends ConsumerWidget {
                   padding: const EI.a(12),
                   decoration: BD(
                     color: isMine ? const Color.fromARGB(255, 58, 79, 154) : kW,
-                    boxShadow: renderShadow
-                        ? [
-                            BoxShadow(
-                              color: color.wo(0.5),
-                              blurRadius: 15,
-                              offset: const Offset(0, 0),
-                            ),
-                          ]
-                        : null,
+                    border: Border.all(color: color.wo(0.2)),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(isMine ? 20 : 0),
                       topRight: const Radius.circular(20),
@@ -280,7 +285,7 @@ class _Input extends ConsumerWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: C(
-            decoration: BD(color: kW.wo(0.7)),
+            decoration: BD(color: kW.wo(0.8)),
             padding: EI.o(l: 12, r: 12, b: paddingBottom + 12, t: 12),
             child: Stack(
               children: [
@@ -354,6 +359,54 @@ class _Input extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScrollToBottomButton extends ConsumerWidget {
+  const _ScrollToBottomButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inputHeight = ref.watch(P.chat.inputHeight);
+    final atBottom = ref.watch(P.chat.atBottom);
+    final screenWidth = ref.watch(P.app.screenWidth);
+    final buttonSize = 36.0;
+    return AnimatedPositioned(
+      duration: 350.ms,
+      curve: Curves.easeInOutBack,
+      left: (screenWidth - buttonSize) / 2,
+      bottom: atBottom ? 0 : inputHeight + 12,
+      child: AnimatedOpacity(
+        opacity: atBottom ? 0 : 1,
+        duration: 150.ms,
+        child: GD(
+          onTap: atBottom
+              ? null
+              : () {
+                  P.chat.scrollToBottom();
+                },
+          child: ClipRRect(
+            borderRadius: 8.r,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: C(
+                decoration: BD(
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.wo(0.333)),
+                  color: Theme.of(context).colorScheme.primary.wo(0.333),
+                  borderRadius: 8.r,
+                ),
+                height: buttonSize,
+                width: buttonSize,
+                child: Icon(
+                  Icons.arrow_downward,
+                  color: kW,
+                ),
+              ),
             ),
           ),
         ),

@@ -32,6 +32,16 @@ class _Chat {
   late final scrollOffset = _gs(0.0);
 
   late final inputHeight = _gs(77.0);
+
+  late final useReverse = _gs(true);
+
+  late final atBottom = _P((ref) {
+    final useReverse = ref.watch(this.useReverse);
+    final scrollOffset = ref.watch(this.scrollOffset);
+    if (useReverse) return scrollOffset <= 0;
+    final maxScrollExtent = scrollController.position.maxScrollExtent;
+    return scrollOffset >= maxScrollExtent;
+  });
 }
 
 /// Public methods
@@ -121,7 +131,14 @@ extension $Chat on _Chat {
   }
 
   FV scrollToBottom({Duration? duration, bool? animate = true}) async {
-    scrollTo(offset: scrollController.position.maxScrollExtent, duration: duration, animate: animate);
+    final useReverse = P.chat.useReverse.v;
+
+    if (useReverse) {
+      await scrollTo(offset: 0, duration: duration, animate: animate);
+      return;
+    }
+
+    await scrollTo(offset: scrollController.position.maxScrollExtent, duration: duration, animate: animate);
   }
 
   FV scrollTo({required double offset, Duration? duration, bool? animate = true}) async {
@@ -144,20 +161,6 @@ extension _$Chat on _Chat {
   FV _init() async {
     if (kDebugMode) print("💬 $runtimeType._init");
 
-    if (Config.offlineChat) {
-      final l = List.generate(20, (index) {
-        return (index, HF.randomString(max: 500));
-      }).m((param) {
-        final isMine = HF.randomBool();
-        return Message(
-          id: param.$1,
-          content: param.$2,
-          isMine: isMine,
-        );
-      });
-      messages.u(l);
-    }
-
     if (kDebugMode) {
       messages.l((messages) {
         final changingMessages = messages.where((m) => m.changing).toList();
@@ -179,6 +182,14 @@ multiple ... channels are changing?
 
     scrollController.addListener(() {
       scrollOffset.u(scrollController.offset);
+    });
+
+    P.app.pageKey.l(_onPageKeyChanged);
+  }
+
+  void _onPageKeyChanged(PageKey pageKey) {
+    Future.delayed(200.ms).then((_) {
+      messages.u([]);
     });
   }
 
@@ -231,9 +242,9 @@ multiple ... channels are changing?
       await Future.delayed((HF.randomInt(max: 30) + 20).ms);
       final charactor = HF.randomString(min: 1, max: 1, spacingRate: 0.2);
       received.ua(charactor);
-      Future.delayed(13.ms).then((_) {
-        scrollToBottom(duration: 100.ms);
-      });
+      // Future.delayed(13.ms).then((_) {
+      //   scrollToBottom(duration: 100.ms);
+      // });
     }
 
     receiving.u(false);

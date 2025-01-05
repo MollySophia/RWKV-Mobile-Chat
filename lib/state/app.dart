@@ -31,7 +31,7 @@ class _App with WidgetsBindingObserver {
 
   final isPortrait = _gs(true);
 
-  final _pageKey = _gs(Const.firstPage);
+  final _pageKey = _gs(kFirstPage);
   late final pageKey = _P((ref) => ref.watch(_pageKey));
 
   late final locale = _gsn<Locale>();
