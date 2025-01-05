@@ -25,10 +25,6 @@ class _Chat {
 
   late final _currentStorageKey = _gsn<String>();
 
-  String _fullString = "";
-
-  late final EventDistributor _eventDistributor = EventDistributor(25.ms);
-
   late final scrollOffset = _gs(0.0);
 
   late final inputHeight = _gs(77.0);
@@ -70,13 +66,6 @@ extension $Chat on _Chat {
     // debugger();
     if (kDebugMode) print("💬 $runtimeType.send: $message");
 
-    if (Config.offlineChat) {
-      final msg = await _feekSend(message);
-      await Future.delayed(500.ms);
-      await _feekReceive();
-      return;
-    }
-
     final id = DateTime.now().microsecondsSinceEpoch;
     final msg = Message(
       id: id,
@@ -90,21 +79,9 @@ extension $Chat on _Chat {
 
     final streamId = DateTime.now().microsecondsSinceEpoch;
 
-    // TODO: @wangce
-    // final stream = _postStreaming(
-    //   "/llm/chat",
-    //   body: {
-    //     "message": message,
-    //     "channelId": currentChannel.id,
-    //     "streamId": streamId,
-    //   },
-    //   headers: {
-    //     "Accept": "text/event-stream",
-    //   },
-    // );
+    P.rwkv.send(message);
 
-    _fullString = "";
-    received.u(_fullString);
+    received.uc();
     receiving.u(true);
 
     final receiveId = DateTime.now().microsecondsSinceEpoch;
@@ -119,15 +96,16 @@ extension $Chat on _Chat {
     messages.ua(receiveMsg);
 
     // TODO: @wangce
-    // stream.listen((event) {
-    //   _onStreamEvent(event: event, streamId: streamId.toString());
-    // }, onDone: () {
-    //   _onStreamDone(streamId: streamId.toString());
-    //   _fullyReceived(id: receiveId);
-    // }, onError: (error, stackTrace) {
-    //   _onStreamError(streamId: streamId.toString(), error: error, stackTrace: stackTrace);
-    //   _fullyReceived(id: receiveId);
-    // });
+    P.rwkv.messagesController.stream.drain();
+    P.rwkv.messagesController.stream.listen((event) {
+      _onStreamEvent(event: event, streamId: streamId.toString());
+    }, onDone: () {
+      _onStreamDone(streamId: streamId.toString());
+      _fullyReceived(id: receiveId);
+    }, onError: (error, stackTrace) {
+      _onStreamError(streamId: streamId.toString(), error: error, stackTrace: stackTrace);
+      _fullyReceived(id: receiveId);
+    });
   }
 
   FV scrollToBottom({Duration? duration, bool? animate = true}) async {
@@ -205,52 +183,6 @@ multiple ... channels are changing?
     if (next != textInController) textEditingController.text = next;
   }
 
-  Future<Message?> _feekSend(String message) async {
-    final id = DateTime.now().millisecondsSinceEpoch;
-    final msg = Message(
-      id: id,
-      content: message,
-      isMine: true,
-    );
-    messages.ua(msg);
-    Future.delayed(34.ms).then((_) {
-      scrollToBottom();
-    });
-    return msg;
-  }
-
-  FV _feekReceive() async {
-    received.u("");
-    receiving.u(true);
-
-    final id = DateTime.now().millisecondsSinceEpoch;
-
-    final msg = Message(
-      id: id,
-      content: "",
-      isMine: false,
-      changing: true,
-    );
-
-    messages.ua(msg);
-
-    final length = HF.randomInt(max: 500, min: 100);
-
-    if (kDebugMode) print("💬 length: $length");
-
-    for (var i = 0; i < length; i++) {
-      await Future.delayed((HF.randomInt(max: 30) + 20).ms);
-      final charactor = HF.randomString(min: 1, max: 1, spacingRate: 0.2);
-      received.ua(charactor);
-      // Future.delayed(13.ms).then((_) {
-      //   scrollToBottom(duration: 100.ms);
-      // });
-    }
-
-    receiving.u(false);
-    await _fullyReceived(id: id);
-  }
-
   FV _fullyReceived({required int id}) async {
     final currentMessages = [...messages.v];
     bool found = false;
@@ -279,44 +211,14 @@ multiple ... channels are changing?
   }) async {
     String eventStr = event.toString().trim();
     if (eventStr.isEmpty) return;
-    _fullString += eventStr;
-
-    String temp = "";
-    for (var i = 0; i < _fullString.length; i++) {
-      final char = _fullString[i];
-      temp += char;
-      final shouldSend = temp.endsWith("data:{") && temp.startsWith("data:{") && temp.length > 7;
-      if (shouldSend) {
-        final textToBeSent = temp.substring(5, temp.length - 6).trim();
-
-        try {
-          final json = jsonDecode(textToBeSent);
-          final _received = json["content"];
-          // if (kDebugMode) print("💬 _received: $_received");
-          _eventDistributor.addEvent(() {
-            received.ua(_received);
-          });
-        } catch (e) {
-          if (kDebugMode) print("😡 $runtimeType._onStreamEvent: $e");
-        }
-
-        temp = temp.substring(temp.length - 6, temp.length);
-        Future.delayed(13.ms).then((_) {
-          scrollToBottom(duration: 100.ms);
-        });
-      }
-    }
-
-    _fullString = temp;
+    received.u(eventStr);
   }
 
   FV _onStreamDone({
     required String streamId,
   }) async {
     if (kDebugMode) print("💬 _onStreamDone");
-    if (kDebugMode) print("💬 _fullString: $_fullString");
     receiving.u(false);
-    _eventDistributor.executeAllRemaining();
   }
 
   FV _onStreamError({
@@ -327,6 +229,5 @@ multiple ... channels are changing?
     if (kDebugMode) print("💬 _onStreamError");
     if (kDebugMode) print("😡 error: $error");
     receiving.u(false);
-    _eventDistributor.executeAllRemaining();
   }
 }
