@@ -414,10 +414,10 @@ packages:
     dependency: "direct main"
     description:
       name: halo
-      sha256: "824e6f8bbcf403d3f5d5e5e9822a9b2a6f63eb47731c8c64620fdf1347b41c39"
+      sha256: "7b3a2a85d770454619e4415e797006c014423d2defe3034399a610a1caf95211"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.3"
+    version: "0.2.4"
   hashcodes:
     dependency: transitive
     description:
@@ -478,10 +478,10 @@ packages:
     dependency: transitive
     description:
       name: image_size_getter
-      sha256: "0511799498340b70993d2dfb34b55a2247b5b801d75a6cdd4543acfcafdb12b0"
+      sha256: c769a86b21a2f5ccc6d6a94e16243a1e04004afa15d0960589d6254ce73c82fe
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   intersperse:
     dependency: transitive
     description:
@@ -767,7 +767,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: e98b2330f7b5ba9d0432e7676137c675a7516eeb
+      resolved-ref: "2fbbf0466b516beca900d79fa9845df0121b384c"
       url: "https://github.com/MollySophia/rwkv_mobile_flutter.git"
     source: git
     version: "0.0.1"
