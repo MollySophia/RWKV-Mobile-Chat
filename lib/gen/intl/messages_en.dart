@@ -22,6 +22,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "chat_copied_to_clipboard":
+            MessageLookupByLibrary.simpleMessage("Copied to clipboard"),
         "chat_title": MessageLookupByLibrary.simpleMessage("RWKV Chat v7 0.1B"),
         "chat_title_placeholder":
             MessageLookupByLibrary.simpleMessage("Enter your message...")

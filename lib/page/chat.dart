@@ -3,8 +3,10 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:chat/gen/l10n.dart';
+import 'package:chat/widgets/alert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:halo/halo.dart';
 import 'package:chat/model/message.dart';
@@ -25,6 +27,7 @@ class PageChat extends ConsumerWidget {
             child: GD(
               onTap: () {
                 P.chat.focusNode.unfocus();
+                P.chat.editIndex.u(null);
               },
               child: _List(),
             ),
@@ -175,22 +178,37 @@ class _Message extends ConsumerWidget {
                     c: isMine ? CAA.end : CAA.start,
                     children: [
                       T(finalContent, s: TS(c: isMine ? kW : kB)),
-                      if (isMine) 8.h,
+                      if (isMine) 12.h,
                       if (isMine)
                         Ro(
                           m: MAA.end,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             GD(
+                              onTap: () {
+                                P.chat.textEditingController.value = TextEditingValue(text: finalContent);
+                              },
                               child: Icon(
-                                Icons.add,
-                                color: kW,
+                                Icons.edit,
+                                color: kW.wo(0.8),
+                                size: 20,
+                              ),
+                            ),
+                            4.w,
+                            GD(
+                              onTap: () {
+                                Alert.success(S.current.chat_copied_to_clipboard);
+                                Clipboard.setData(ClipboardData(text: finalContent));
+                              },
+                              child: Icon(
+                                Icons.copy,
+                                color: kW.wo(0.8),
                                 size: 20,
                               ),
                             ),
                           ],
                         ),
-                      if (!isMine) 8.h,
+                      if (!isMine) 12.h,
                       if (!isMine)
                         Ro(
                           m: MAA.start,
@@ -215,8 +233,28 @@ class _Message extends ConsumerWidget {
                             4.w,
                             GD(
                               child: Icon(
-                                Icons.add,
-                                color: color,
+                                Icons.refresh,
+                                color: color.wo(0.8),
+                                size: 20,
+                              ),
+                            ),
+                            4.w,
+                            GD(
+                              child: Icon(
+                                Icons.edit,
+                                color: color.wo(0.8),
+                                size: 20,
+                              ),
+                            ),
+                            4.w,
+                            GD(
+                              onTap: () {
+                                Alert.success(S.current.chat_copied_to_clipboard);
+                                Clipboard.setData(ClipboardData(text: finalContent));
+                              },
+                              child: Icon(
+                                Icons.copy,
+                                color: color.wo(0.8),
                                 size: 20,
                               ),
                             ),
@@ -238,7 +276,14 @@ class _Input extends ConsumerWidget {
   const _Input();
 
   void _onChanged(String value) {
-    // if (kDebugMode) print("💬 $runtimeType._onChanged: $value");
+    String finalValue = value;
+    while (finalValue.contains("\n\n\n")) {
+      finalValue = finalValue.replaceAll("\n\n\n", "\n\n");
+    }
+    while (finalValue.startsWith("\n")) {
+      finalValue = finalValue.substring(1);
+    }
+    P.chat.textEditingController.value = TextEditingValue(text: finalValue);
   }
 
   void onEditingComplete() {
@@ -350,13 +395,6 @@ class _Input extends ConsumerWidget {
                               ),
                             ),
                           ),
-                    prefixIcon: IconButton(
-                      onPressed: receiving ? null : _onMicPressed,
-                      icon: Icon(
-                        Icons.mic,
-                        color: color.wo(receiving ? 0.5 : 1),
-                      ),
-                    ),
                   ),
                 ),
               ],

@@ -38,6 +38,10 @@ class _Chat {
     final maxScrollExtent = scrollController.position.maxScrollExtent;
     return scrollOffset >= maxScrollExtent;
   });
+
+  late final receiveId = _gsn<int>();
+
+  late final editIndex = _gsn<int>();
 }
 
 /// Public methods
@@ -77,15 +81,13 @@ extension $Chat on _Chat {
       scrollToBottom();
     });
 
-    final streamId = DateTime.now().microsecondsSinceEpoch;
-
     P.rwkv.send(message);
 
     received.uc();
     receiving.u(true);
 
     final receiveId = DateTime.now().microsecondsSinceEpoch;
-
+    this.receiveId.u(receiveId);
     final receiveMsg = Message(
       id: receiveId,
       content: "",
@@ -94,18 +96,21 @@ extension $Chat on _Chat {
     );
 
     messages.ua(receiveMsg);
+  }
 
+  FV sendAt(int index) async {
     // TODO: @wangce
-    P.rwkv.messagesController.stream.drain();
-    P.rwkv.messagesController.stream.listen((event) {
-      _onStreamEvent(event: event, streamId: streamId.toString());
-    }, onDone: () {
-      _onStreamDone(streamId: streamId.toString());
-      _fullyReceived(id: receiveId);
-    }, onError: (error, stackTrace) {
-      _onStreamError(streamId: streamId.toString(), error: error, stackTrace: stackTrace);
-      _fullyReceived(id: receiveId);
-    });
+    P.rwkv.sendAt(messages.v[index].content, index);
+  }
+
+  FV regenerateAt(int index) async {
+    // TODO: @wangce
+    P.rwkv.regenerateAt(index);
+  }
+
+  FV modifyAt(int index, String message) async {
+    // TODO: @wangce
+    P.rwkv.modifyAt(index, message);
   }
 
   FV scrollToBottom({Duration? duration, bool? animate = true}) async {
@@ -163,6 +168,14 @@ multiple ... channels are changing?
     });
 
     P.app.pageKey.l(_onPageKeyChanged);
+
+    P.rwkv.messagesController.stream.listen((event) {
+      _onStreamEvent(event: event);
+    }, onDone: () {
+      _onStreamDone();
+    }, onError: (error, stackTrace) {
+      _onStreamError(error: error, stackTrace: stackTrace);
+    });
   }
 
   void _onPageKeyChanged(PageKey pageKey) {
@@ -172,23 +185,23 @@ multiple ... channels are changing?
   }
 
   void _onTextEditingControllerValueChanged() {
-    if (kDebugMode) print("💬 _onTextEditingControllerValueChanged");
+    // if (kDebugMode) print("💬 _onTextEditingControllerValueChanged");
     final textInController = textEditingController.text;
     if (text.v != textInController) text.u(textInController);
   }
 
   void _onTextChanged(String next) {
-    if (kDebugMode) print("💬 _onTextChanged");
+    // if (kDebugMode) print("💬 _onTextChanged");
     final textInController = textEditingController.text;
     if (next != textInController) textEditingController.text = next;
   }
 
-  FV _fullyReceived({required int id}) async {
+  FV _fullyReceived() async {
     final currentMessages = [...messages.v];
     bool found = false;
     for (var i = 0; i < currentMessages.length; i++) {
       final msg = currentMessages[i];
-      if (msg.id == id) {
+      if (msg.id == receiveId.v) {
         final newMsg = Message(
           id: msg.id,
           content: received.v,
@@ -205,24 +218,36 @@ multiple ... channels are changing?
     messages.u(currentMessages);
   }
 
-  FV _onStreamEvent({
-    required String event,
-    required String streamId,
-  }) async {
-    String eventStr = event.toString().trim();
-    if (eventStr.isEmpty) return;
-    received.u(eventStr);
+  FV _onStreamEvent({required JSON event}) async {
+    final type = RWKVMessageType.fromString(event["type"]);
+    switch (type) {
+      case RWKVMessageType.response:
+        received.u(event["content"]);
+        break;
+      case RWKVMessageType.generateStart:
+        receiving.u(true);
+        received.u("");
+        break;
+      case RWKVMessageType.streamResponse:
+        received.u(event["content"]);
+        receiving.u(false);
+        _fullyReceived();
+        break;
+      case RWKVMessageType.currentPrompt:
+        received.u(event["content"]);
+        break;
+      case RWKVMessageType.samplerParams:
+        received.u(event["content"]);
+        break;
+    }
   }
 
-  FV _onStreamDone({
-    required String streamId,
-  }) async {
+  FV _onStreamDone() async {
     if (kDebugMode) print("💬 _onStreamDone");
     receiving.u(false);
   }
 
   FV _onStreamError({
-    required String streamId,
     required Object error,
     required StackTrace stackTrace,
   }) async {

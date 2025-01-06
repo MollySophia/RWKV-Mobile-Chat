@@ -69,6 +69,16 @@ class S {
       args: [],
     );
   }
+
+  /// `已复制到剪贴板`
+  String get chat_copied_to_clipboard {
+    return Intl.message(
+      '已复制到剪贴板',
+      name: 'chat_copied_to_clipboard',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

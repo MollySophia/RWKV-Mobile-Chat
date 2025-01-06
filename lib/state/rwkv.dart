@@ -1,9 +1,21 @@
 part of 'p.dart';
 
+enum RWKVMessageType {
+  currentPrompt,
+  samplerParams,
+  response,
+  generateStart,
+  streamResponse;
+
+  static RWKVMessageType fromString(String str) {
+    return values.firstWhere((e) => e.name == str);
+  }
+}
+
 class _RWKV {
   SendPort? sendPort;
 
-  late final messagesController = StreamController<String>();
+  late final messagesController = StreamController<JSON>();
 
   late final String firstMessage = "Hello!";
 
@@ -14,8 +26,34 @@ class _RWKV {
 /// Public methods
 extension $RWKV on _RWKV {
   void send(String message) {
-    final messages = P.chat.messages.v.m((e) => e.content);
-    sendPort!.send(("message", [...messages, message]));
+    final existingMessages = P.chat.messages.v.m((e) => e.content);
+    final newMessages = [...existingMessages];
+    if (kDebugMode) print("💬 $runtimeType.send: ${newMessages.length} messages");
+    sendPort!.send(("message", newMessages));
+  }
+
+  void sendAt(String message, int index) {
+    // TODO: @wangce
+    final existingMessages = P.chat.messages.v.m((e) => e.content);
+    final newMessages = [...existingMessages];
+    if (kDebugMode) print("💬 $runtimeType.sendAt: ${newMessages.length} messages");
+    sendPort!.send(("message", newMessages));
+  }
+
+  void regenerateAt(int index) {
+    // TODO: @wangce
+    final existingMessages = P.chat.messages.v.m((e) => e.content);
+    final newMessages = existingMessages.sublist(0, index);
+    if (kDebugMode) print("💬 $runtimeType.regenerateAt: ${newMessages.length} messages");
+    sendPort!.send(("message", newMessages));
+  }
+
+  void modifyAt(int index, String message) {
+    // TODO: @wangce
+    final existingMessages = P.chat.messages.v.m((e) => e.content);
+    final newMessages = [...existingMessages];
+    if (kDebugMode) print("💬 $runtimeType.modifyAt: ${newMessages.length} messages");
+    sendPort!.send(("message", newMessages));
   }
 }
 
@@ -51,7 +89,6 @@ extension _$RWKV on _RWKV {
 
     receivePort.listen(_onMessage);
 
-    List<String> messagesList = [firstMessage];
     while (sendPort == null) {
       if (kDebugMode) print("💬 waiting for sendPort...");
       await Future.delayed(const Duration(milliseconds: 100));
@@ -61,7 +98,6 @@ extension _$RWKV on _RWKV {
     sendPort!.send(("getPrompt", null));
     sendPort!.send(("setSamplerParams", {"temperature": 2.0, "top_k": 128, "top_p": 0.5, "presence_penalty": 0.5, "frequency_penalty": 0.5, "penalty_decay": 0.996}));
     sendPort!.send(("getSamplerParams", null));
-    sendPort!.send(("message", messagesList));
   }
 
   void _onMessage(message) {
@@ -72,31 +108,47 @@ extension _$RWKV on _RWKV {
 
     if (message["samplerParams"] != null) {
       if (kDebugMode) print("💬 Got samplerParams: ${message["samplerParams"]}");
+      messagesController.add({
+        "content": message["samplerParams"].toString(),
+        "type": RWKVMessageType.samplerParams.name,
+      });
       return;
     }
 
     if (message["currentPrompt"] != null) {
       if (kDebugMode) print("💬 Got currentPrompt: \"${message["currentPrompt"]}\"");
+      messagesController.add({
+        "content": message["currentPrompt"].toString(),
+        "type": RWKVMessageType.currentPrompt.name,
+      });
       return;
     }
 
     if (message["generateStart"] == true) {
       generating.u(true);
+      messagesController.add({
+        "content": "",
+        "type": RWKVMessageType.generateStart.name,
+      });
       return;
     }
 
     if (message["response"] != null) {
       final responseText = message["response"].toString();
-      if (kDebugMode) print("🚧 response:\n$responseText");
-      messagesController.add(responseText);
+      messagesController.add({
+        "content": responseText,
+        "type": RWKVMessageType.response.name,
+      });
       generating.u(false);
       return;
     }
 
     if (message["streamResponse"] != null) {
       final responseText = message["streamResponse"].toString();
-      if (kDebugMode) print("🚧 streamResponse:\n$responseText");
-      messagesController.add(responseText);
+      messagesController.add({
+        "content": responseText,
+        "type": RWKVMessageType.streamResponse.name,
+      });
       return;
     }
   }
