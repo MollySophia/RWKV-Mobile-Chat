@@ -767,7 +767,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "2fbbf0466b516beca900d79fa9845df0121b384c"
+      resolved-ref: "158af89ec81ef5d03d4b68f1dba0fa3023ab8ae5"
       url: "https://github.com/MollySophia/rwkv_mobile_flutter.git"
     source: git
     version: "0.0.1"

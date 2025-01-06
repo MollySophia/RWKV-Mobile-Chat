@@ -71,6 +71,7 @@ extension _$RWKV on _RWKV {
     late final String modelPath;
     late final String tokenizerPath;
     late final String backendName;
+
     if (Platform.isIOS || Platform.isMacOS) {
       modelPath = await getModelPath("assets/model/RWKV-x070-World-0.1B-v2.8-20241210-ctx4096.st");
       tokenizerPath = await getModelPath("assets/model/b_rwkv_vocab_v20230424.txt");

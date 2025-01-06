@@ -276,14 +276,14 @@ class _Input extends ConsumerWidget {
   const _Input();
 
   void _onChanged(String value) {
-    String finalValue = value;
-    while (finalValue.contains("\n\n\n")) {
-      finalValue = finalValue.replaceAll("\n\n\n", "\n\n");
-    }
-    while (finalValue.startsWith("\n")) {
-      finalValue = finalValue.substring(1);
-    }
-    P.chat.textEditingController.value = TextEditingValue(text: finalValue);
+    // String finalValue = value;
+    // while (finalValue.contains("\n\n\n")) {
+    //   finalValue = finalValue.replaceAll("\n\n\n", "\n\n");
+    // }
+    // while (finalValue.startsWith("\n")) {
+    //   finalValue = finalValue.substring(1);
+    // }
+    // P.chat.textEditingController.value = TextEditingValue(text: finalValue);
   }
 
   void onEditingComplete() {
